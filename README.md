@@ -3,10 +3,8 @@
 ## Problem statement
 Learning-to-rank (LTR) models are often complex since they are trained
 using many parameters to achieve high accuracy. The complexity of ranking
-models can sometimes undermine their efficacy, as humans struggle to compre-
-hend the rationale behind a particular order. So-called “black boxes” often
-become a problem due to the difficulty of understanding the factors contribut-
-ing to a model’s output. The absence of transparency can derive to unwanted
+models can sometimes undermine their efficacy, as humans struggle to comprehend the rationale behind a particular order. So-called “black boxes” often
+become a problem due to the difficulty of understanding the factors contributing to a model’s output. The absence of transparency can derive to unwanted
 issues as it may result in errors, biases, or even unethical behavior. Hence, the
 urge to develop interpretable LTR models.
 
