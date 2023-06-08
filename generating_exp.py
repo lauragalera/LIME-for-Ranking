@@ -14,11 +14,12 @@ import math
 from scipy.stats import rankdata
 from sklearn.linear_model import RidgeClassifier
 from imblearn.over_sampling import SMOTE
+from sklearn.neighbors import NearestNeighbors
 
-_model_yahoo = "output_yahoo/export/best_model_by_loss/1684750812"
-_model_mslr = "output_mslr/export/best_model_by_loss/1684752307"
-_test_yahoo = "datasets/yahoo/test_yahoo.csv"
-_test_mslr = "datasets/MSLR-WEB10K/test_mslr.csv"
+_model_yahoo = "/home/laura/Desktop/master/TFM/output_yahoo/export/latest_model/1684750780"
+_model_mslr = "/home/laura/Desktop/master/TFM/output_mslr/export/latest_model/1684752279"
+_test_yahoo = "/home/laura/Desktop/master/TFM/datasets/yahoo/test_yahoo.csv"
+_test_mslr = "/home/laura/Desktop/master/TFM/datasets/MSLR-WEB10K/test_mslr.csv"
 
 _name_features = [str(i + 1) for i in range(0, 100)]
 _name_features_mslr = ['covered_query_term_number_body', 'covered_query_term_number_anchor',
@@ -125,54 +126,63 @@ class Explanations:
         # similarity or weight based on the Gaussian kernel function
         return np.sqrt(np.exp(-(d ** 2) / self.kernel_width ** 2))
 
-    def empirical_sampling(self, instance_explained):
+    def empirical_sampling(self, instance_explained, qid_data):
         generated_docs = []
 
         for t in range(0, self.sample_size):
             new_instance_explained = copy.copy(instance_explained)
-            num_features = instance_explained.shape[0]
-            total_feature_selected = np.random.randint((num_features - 2) / 4, num_features - 2)
-            selected_features = np.random.randint(2, num_features, total_feature_selected)
 
-            for sel_feat in selected_features:
-                new_instance_explained[sel_feat] = np.random.choice(self.data.iloc[:, sel_feat], 1)[0]
+            for sel_feat in range(2, qid_data.shape[1]):
+                new_instance_explained[sel_feat] = np.random.choice(qid_data.iloc[:, sel_feat], 1)[0]
 
             generated_docs.append(new_instance_explained)
         return generated_docs
 
-    def uniformed_sampling(self, instance_explained):
+    def knn(self, k, instance_explained, qid_data):
         generated_docs = []
 
-        for _ in range(0, self.sample_size):
+        nbrs = NearestNeighbors(n_neighbors = k + 1)
+        nbrs.fit(qid_data.iloc[:, 2:])
+        instance = instance_explained.values[2:].astype(np.float32)
+        distance, indices = nbrs.kneighbors(instance.reshape(1, -1))
+        indices = indices.flatten()[1:]
+        for t in range (0, self.sample_size):
             new_instance_explained = copy.copy(instance_explained)
-            num_features = instance_explained.shape[0]
-            total_feature_selected = np.random.randint((num_features - 2) / 4, num_features - 2)
-            selected_features = np.random.randint(2, num_features, total_feature_selected)
-
-            for sel_feat in selected_features:
-                min_val = np.min(self.data.iloc[:, sel_feat])
-                max_val = np.max(self.data.iloc[:, sel_feat])
+            indx_neighbor = np.random.choice(indices)
+            random_neighbor = qid_data.iloc[indx_neighbor]
+            for sel_feat in range(2, qid_data.shape[1]):
+                min_val = np.min([random_neighbor.iloc[sel_feat], instance_explained.iloc[sel_feat]])
+                max_val = np.max([random_neighbor.iloc[sel_feat], instance_explained.iloc[sel_feat]])
                 perturbation_range = (min_val, max_val)
                 perturbation = np.random.uniform(*perturbation_range)
                 new_instance_explained[sel_feat] = perturbation
             generated_docs.append(new_instance_explained)
-
         return generated_docs
-
-    def gaussian_inverse_sampling(self, instance_explained):
+    def uniformed_sampling(self, instance_explained, qid_data):
         generated_docs = []
 
         for t in range(0, self.sample_size):
             new_instance_explained = copy.copy(instance_explained)
-            num_features = instance_explained.shape[0]
-            total_feature_selected = np.random.randint((num_features - 2) / 4, num_features - 2)
-            selected_features = np.random.randint(2, num_features, total_feature_selected)
 
-            for sel_feat in selected_features:
-                mu = np.mean(self.data.iloc[:, sel_feat].values)
-                sigma = np.std(self.data.iloc[:, sel_feat].values)
+            for sel_feat in range(2, qid_data.shape[1]):
+                mu = np.mean(qid_data.iloc[:, sel_feat].values)
+                sigma = np.std(qid_data.iloc[:, sel_feat].values)
                 z = np.random.normal(0, 1)
                 new_instance_explained[sel_feat] = z * sigma + mu
+
+            generated_docs.append(new_instance_explained)
+        return generated_docs
+
+    def gaussian_inverse_sampling(self, instance_explained, qid_data):
+        generated_docs = []
+
+        for t in range(0, self.sample_size):
+            new_instance_explained = copy.copy(instance_explained)
+
+            for sel_feat in range(2, qid_data.shape[1]):
+                sigma = np.std(qid_data.iloc[:, sel_feat].values)
+                z = np.random.normal(0, 1)
+                new_instance_explained[sel_feat] = z * sigma + instance_explained[sel_feat]
 
             generated_docs.append(new_instance_explained)
         return generated_docs
@@ -191,11 +201,11 @@ class Explanations:
 
         # Returns list of new documents samples
         if sampling == 'empirical':
-            generated_docs = self.empirical_sampling(instance_explained)
+            generated_docs = self.empirical_sampling(instance_explained, qid_data)
         elif sampling == 'uniformed':
-            generated_docs = self.uniformed_sampling(instance_explained)
+            generated_docs = self.knn(10, instance_explained, qid_data)
         elif sampling == 'gaussian':
-            generated_docs = self.gaussian_inverse_sampling(instance_explained)
+            generated_docs = self.gaussian_inverse_sampling(instance_explained, qid_data)
 
         generated_predictions = []
 
@@ -221,6 +231,11 @@ class Explanations:
 
         samples_fea = [series[2:] for series in generated_docs]
         X_resampled, y_resampled = smote.fit_resample(np.array(samples_fea), labels)
+
+        gen_docs = []
+        for i in range(0, len(generated_docs)):
+            gen_docs.append(generated_docs[i].values[2:])
+        gen_docs = np.array(gen_docs).astype(np.float32)
 
         # Calculates weight for each sample depending on distance to instance
         i_explained = instance_explained.values[2:].astype(np.float32)
@@ -266,13 +281,12 @@ def main():
 
     df_test = pd.read_csv(_test_yahoo)
     grouped_qid = df_test.groupby('qid')
-    qids = [22942, 22952, 22966, 22976, 22995, 22996, 23211, 23250, 23296, 23299,
-            23319, 23334, 23367, 23385, 23413, 23433, 23450, 23465, 23484, 23497]
+    qids = [23843, 23875, 23996, 24217, 24251, 24626, 24633, 24709, 24712, 24726, 24746, 24754, 24762, 24832, 24840, 24848, 24869, 24878, 24883, 24918, 24921, 24922, 24961, 25017, 25023, 25051, 25054, 25086, 25088, 25133, 25182, 25215, 25224, 27890, 27987, 28001, 28024, 28026, 28040, 28041, 28042, 28049, 28052, 28073, 28106, 28130, 28150, 28153, 28175, 28183, 28185, 28190, 28269, 28274, 28289, 28310, 28375, 28382, 28397, 28398, 28412, 28417, 28420, 28462, 28472, 28482, 28544, 28550, 28552, 28557, 28577, 28596, 28615, 28654, 28657, 28659, 28694, 28715, 28757, 28805, 28836, 28842, 28845, 28866, 28890, 28969, 28995, 29029, 29050, 29113, 29190, 29213, 29249, 29256, 29334, 29357, 29404, 29438, 29462, 29487, 29625, 29681, 29725, 29760, 29761, 29768, 29776, 29781, 29787, 29790, 29823, 29826, 29863, 29885, 29895]
     ranked_pos = 10
     test = []
     start = time.time()
     print('Start making explanations')
-    for strategy in ['empirical', 'uniformed', 'gaussian']:
+    for strategy in ['gaussian']:
         qids_dict = {'imbalance': [], 'rbo': []}
         for key in qids:
             group_data = grouped_qid.get_group(key)
@@ -289,7 +303,7 @@ def main():
     print('Time took for explanations: {} '.format(end - start))
 
     print('*' * 24 + ' RESULTS ' + '*' * 24)
-    print('=' * 16 + ' ' + str(10) + 'th ranked doc ' + '=' * 16)
+    print('=' * 16 + ' ' + str(ranked_pos) + 'th ranked doc ' + '=' * 16)
     print(test)
     print('=' * 64)
 
