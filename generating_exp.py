@@ -16,10 +16,10 @@ from sklearn.linear_model import RidgeClassifier
 from imblearn.over_sampling import SMOTE
 from sklearn.neighbors import NearestNeighbors
 
-_model_yahoo = "/home/laura/Desktop/master/TFM/output_yahoo/export/latest_model/1684750780"
-_model_mslr = "/home/laura/Desktop/master/TFM/output_mslr/export/latest_model/1684752279"
-_test_yahoo = "/home/laura/Desktop/master/TFM/datasets/yahoo/test_yahoo.csv"
-_test_mslr = "/home/laura/Desktop/master/TFM/datasets/MSLR-WEB10K/test_mslr.csv"
+_model_yahoo = "master/TFM/output_yahoo/export/latest_model/1684750780"
+_model_mslr = "master/TFM/output_mslr/export/latest_model/1684752279"
+_test_yahoo = "master/TFM/datasets/yahoo/test_yahoo.csv"
+_test_mslr = "master/TFM/datasets/MSLR-WEB10K/test_mslr.csv"
 
 _name_features = [str(i + 1) for i in range(0, 100)]
 _name_features_mslr = ['covered_query_term_number_body', 'covered_query_term_number_anchor',
@@ -138,7 +138,7 @@ class Explanations:
             generated_docs.append(new_instance_explained)
         return generated_docs
 
-    def knn(self, k, instance_explained, qid_data):
+    def uniformed_sampling(self, k, instance_explained, qid_data):
         generated_docs = []
 
         nbrs = NearestNeighbors(n_neighbors = k + 1)
@@ -156,20 +156,6 @@ class Explanations:
                 perturbation_range = (min_val, max_val)
                 perturbation = np.random.uniform(*perturbation_range)
                 new_instance_explained[sel_feat] = perturbation
-            generated_docs.append(new_instance_explained)
-        return generated_docs
-    def uniformed_sampling(self, instance_explained, qid_data):
-        generated_docs = []
-
-        for t in range(0, self.sample_size):
-            new_instance_explained = copy.copy(instance_explained)
-
-            for sel_feat in range(2, qid_data.shape[1]):
-                mu = np.mean(qid_data.iloc[:, sel_feat].values)
-                sigma = np.std(qid_data.iloc[:, sel_feat].values)
-                z = np.random.normal(0, 1)
-                new_instance_explained[sel_feat] = z * sigma + mu
-
             generated_docs.append(new_instance_explained)
         return generated_docs
 
@@ -203,7 +189,7 @@ class Explanations:
         if sampling == 'empirical':
             generated_docs = self.empirical_sampling(instance_explained, qid_data)
         elif sampling == 'uniformed':
-            generated_docs = self.knn(10, instance_explained, qid_data)
+            generated_docs = self.uniformed_sampling(10, instance_explained, qid_data)
         elif sampling == 'gaussian':
             generated_docs = self.gaussian_inverse_sampling(instance_explained, qid_data)
 
