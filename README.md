@@ -1,4 +1,4 @@
-# Generating an interpretable ranking model
+# Exploring the Power of Local Model-Agnostic Explanations for Ranking Model Interpretability
 
 ## Problem statement
 Learning-to-rank (LTR) models are often complex since they are trained
