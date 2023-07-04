@@ -49,14 +49,14 @@ flags.DEFINE_string("eval_input_pattern", None,
                     "Input file path used for eval.")
 flags.DEFINE_string("model_dir", None, "Output directory for models.")
 flags.DEFINE_integer("batch_size", 32, "The batch size for train.")
-flags.DEFINE_integer("num_train_steps", 2000, "Number of steps for train.")
-flags.DEFINE_integer("num_eval_steps", 10, "Number of steps for evaluation.")
+flags.DEFINE_integer("num_train_steps", 15000, "Number of steps for train.")
+flags.DEFINE_integer("num_eval_steps", 100, "Number of steps for evaluation.")
 flags.DEFINE_integer("checkpoint_secs", 30,
                      "Saves a model checkpoint every checkpoint_secs seconds.")
 flags.DEFINE_integer("num_checkpoints", 100,
                      "Saves at most num_checkpoints checkpoints in workspace.")
 
-flags.DEFINE_integer("num_features", 96, "Number of features per example.")
+flags.DEFINE_integer("num_features", 10, "Number of features per example.")
 flags.DEFINE_integer(
     "list_size", 50,
     "List size used for training. Use None for dynamic list size.")
@@ -79,27 +79,9 @@ _LABEL_FEATURE = "relevance_label"
 
 def example_feature_columns():
   """Returns the example feature columns."""
-  feature_names = ['covered_query_term_number_body','covered_query_term_number_anchor','covered_query_term_number_title',
-                 'covered_query_term_number_url','covered_query_term_number_whole_document','covered_query_term_ratio_body',
-                'covered_query_term_ratio_anchor','covered_query_term_ratio_title','covered_query_term_ratio_url',
-                 'covered_query_term_ratio_whole_document', 'stream_length_body', 'stream_length_anchor',
-                'stream_length_title','stream_length_url','stream_length_whole_document','sum_term_freq_body','sum_term_freq_anchor','sum_term_freq_title',
-                 'sum_term_freq_url','sum_term_freq_whole_document','min_term_freq_body','min_term_freq_anchor','min_term_freq_title',
-                 'min_term_freq_url','min_term_freq_whole_document','max_term_freq_body','max_term_freq_anchor','max_term_freq_title',
-                 'max_term_freq_url','max_term_freq_whole_document','mean_term_freq_body','mean_term_freq_anchor','mean_term_freq_title',
-                 'mean_term_freq_url','mean_term_freq_whole_document','sum_stream_length_normalized_term_freq_body','sum_stream_length_normalized_term_freq_anchor',
-                 'sum_stream_length_normalized_term_freq_title','sum_stream_length_normalized_term_freq_url','sum_stream_length_normalized_term_whole_document',
-                 'min_stream_length_normalized_term_freq_body','min_stream_length_normalized_term_freq_anchor','min_stream_length_normalized_term_freq_title',
-                 'min_stream_length_normalized_term_freq_url','min_stream_length_normalized_term_freq_whole_document','max_stream_length_normalized_term_freq_body',
-                 'max_stream_length_normalized_term_freq_anchor','max_stream_length_normalized_term_freq_title','max_stream_length_normalized_term_freq_url',
-                 'max_stream_length_normalized_term_freq_whole_document','mean_stream_length_normalized_term_freq_body','mean_stream_length_normalized_term_freq_anchor',
-                 'mean_stream_length_normalized_term_freq_title','mean_stream_length_normalized_term_freq_url','mean_stream_length_normalized_term_freq_whole_document','boolean_model_body',
-                 'boolean_model_anchor','boolean_model_title','boolean_model_url','boolean_model_whole_document','vector_space_model_body',
-                 'vector_space_model_anchor','vector_space_model_title','vector_space_model_url','vector_space_model_whole_document','BM25_body',
-                 'BM25_anchor','BM25_title','BM25_url','BM25_whole_document','LMIR.ABS_body','LMIR.ABS_anchor','LMIR.ABS_title','LMIR.ABS_url',
-                 'LMIR.ABS_whole_document','LMIR.DIR_body','LMIR.DIR_anchor','LMIR.DIR_title','LMIR.DIR_url','LMIR.DIR_whole_document','LMIR.JM_body',
-                 'LMIR.JM_anchor','LMIR.JM_title','LMIR.JM_url','LMIR.JM_whole_document','num_slash_url','length_url','inlink_number','outlink_number',
-                 'pagerank','siterank','qualityscore','qualityscore2','query_url_click_count','url_click_count','url_dwell_time']
+  feature_names = [
+      "{}".format(i + 1) for i in range(FLAGS.num_features)
+  ]
   return {
       name:
       tf.feature_column.numeric_column(name, shape=(1,), default_value=0.0)
