@@ -5,17 +5,19 @@ The paper can be accessed [here](https://drive.google.com/file/d/1RE97DIV4TzdWkp
 ## Abstract
 
 ```
-Interpreting the factors influencing the ranking positions is crucial for understanding and improving
-learning-to-rank models. While Generalized Additive Models (GAMs) have gained popularity as interpretable
-models in learning-to-rank, the interpretability of neural ranking GAMs is limited due to computational
-intensity, scalability challenges, and potential overfitting, which make GAMs impractical for real-world
-applications and tasks with complex requirements. In this paper, we assess the effectiveness of Local
-Interpretable Model-Agnostic Explanations (LIME) in explaining ranking models as an alternative to inherently
-interpretable models. Our approach utilizes LIME to generate explanations for a neural ranking GAM and analyse
-LIME explanations to those derived from the interpretable ranking model. We also explore the impact of different
-LIME sampling techniques and introduce the novel metric "Overlap AUC" to measure feature importance overlap. The
-experimental results show notable differences among different sampling techniques within LIME and their impact
-on the overlap of the top-5 and top-10 features.
+Interpreting the factors influencing the ranking positions is crucial for understanding
+and improving learning-to-rank models. While Generalized Additive Models (GAMs) have
+gained popularity as interpretable models in learning-to-rank, the interpretability of
+neural ranking GAMs is limited due to computational intensity, scalability challenges,
+and potential overfitting, which make GAMs impractical for real-world applications and
+tasks with complex requirements. In this paper, we assess the effectiveness of Local
+Interpretable Model-Agnostic Explanations (LIME) in explaining ranking models as an
+alternative to inherently interpretable models. Our approach utilizes LIME to generate
+explanations for a neural ranking GAM and analyse LIME explanations to those derived from
+the interpretable ranking model. We also explore the impact of different LIME sampling
+techniques and introduce the novel metric "Overlap AUC" to measure feature importance overlap.
+The experimental results show notable differences among different sampling techniques within
+LIME and their impact on the overlap of the top-5 and top-10 features.
 ```
 ## Dataset
 The dataset used in this paper can be found [here](https://webscope.sandbox.yahoo.com/catalog.php?datatype=c&guccounter=1&guce_referrer=aHR0cHM6Ly93d3cuZ29vZ2xlLmNvbS8&guce_referrer_sig=AQAAABaUSejzCXXbRx_JEL4wOe861J9oqcg6mVwOEukD-zkS7GMD_dz3UpGnBxfZxq7ZHyA0jKLQ6VTXl-vBmvxJ_X2pb2P60L3Z1AYJoCtsxYMJUtTvV3RLmLxkfGyVnHMKuBMgN_ir9x_eCmLlYmdwWwHL5813V7Ks-Lube4hY1QOx).
